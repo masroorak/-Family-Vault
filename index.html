@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Family Vault" />
+  <meta name="theme-color" content="#0f1117" />
+  <title>Family Vault</title>
+  <link rel="manifest" href="manifest.json" />
+  <!-- Apple touch icon references -->
+  <link rel="apple-touch-icon" href="icon-192.png" />
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
+
+    :root {
+      --bg:        #0d0f14;
+      --surface:   #161920;
+      --surface2:  #1e2230;
+      --border:    #2a2f40;
+      --accent:    #c9a96e;
+      --accent2:   #8eb4e3;
+      --danger:    #e07070;
+      --success:   #6ec9a0;
+      --text:      #eef0f5;
+      --muted:     #7a8099;
+      --radius:    16px;
+      --safe-top:  env(safe-area-inset-top, 0px);
+      --safe-bot:  env(safe-area-inset-bottom, 0px);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body, #root {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overscroll-behavior: none;
+    }
+
+    #root { display: flex; flex-direction: column; }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    /* ── Animations ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes shimmer {
+      0%   { background-position: -200% 0; }
+      100% { background-position:  200% 0; }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.5; }
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .fade-up { animation: fadeUp 0.4s cubic-bezier(0.16,1,0.3,1) both; }
+    .fade-up-2 { animation: fadeUp 0.4s 0.08s cubic-bezier(0.16,1,0.3,1) both; }
+    .fade-up-3 { animation: fadeUp 0.4s 0.16s cubic-bezier(0.16,1,0.3,1) both; }
+    .fade-up-4 { animation: fadeUp 0.4s 0.24s cubic-bezier(0.16,1,0.3,1) both; }
+
+    /* ── Lock screen ── */
+    .lock-screen {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: calc(var(--safe-top) + 40px) 32px calc(var(--safe-bot) + 40px);
+      background: radial-gradient(ellipse at 60% 20%, #1a1f35 0%, var(--bg) 65%);
+      gap: 0;
+    }
+
+    .lock-wordmark {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2.6rem;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .lock-wordmark span { color: var(--accent); font-style: italic; }
+
+    .lock-tagline {
+      font-size: 0.82rem;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 48px;
+    }
+
+    .lock-icon-wrap {
+      width: 80px; height: 80px;
+      border-radius: 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 40px;
+      box-shadow: 0 0 40px rgba(201,169,110,0.12);
+    }
+    .lock-icon-wrap svg { width: 36px; height: 36px; }
+
+    .lock-form { width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 14px; }
+
+    .input-group { display: flex; flex-direction: column; gap: 6px; }
+    .input-label { font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+
+    .input-field {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      width: 100%;
+      -webkit-appearance: none;
+    }
+    .input-field:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(201,169,110,0.15);
+    }
+    .input-field::placeholder { color: var(--muted); }
+
+    .btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 15px 24px;
+      border-radius: 12px;
+      border: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn:active { transform: scale(0.97); }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #0d0f14;
+    }
+    .btn-secondary {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-danger {
+      background: transparent;
+      color: var(--danger);
+      border: 1px solid rgba(224,112,112,0.3);
+    }
+    .btn-ghost {
+      background: transparent;
+      color: var(--muted);
+    }
+    .btn:disabled { opacity: 0.45; pointer-events: none; }
+
+    .lock-footer {
+      margin-top: 28px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.6;
+    }
+    .lock-footer button {
+      background: none; border: none; color: var(--accent2);
+      font-size: inherit; font-family: inherit; cursor: pointer;
+      text-decoration: underline; text-underline-offset: 2px;
+    }
+
+    .error-msg {
+      background: rgba(224,112,112,0.1);
+      border: 1px solid rgba(224,112,112,0.25);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 0.85rem;
+      color: var(--danger);
+      text-align: center;
+    }
+
+    /* ── App shell ── */
+    .app-shell {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .top-bar {
+      padding: calc(var(--safe-top) + 16px) 20px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+      flex-shrink: 0;
+    }
+    .top-bar-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.3rem;
+      color: var(--text);
+    }
+    .top-bar-title span { color: var(--accent); font-style: italic; }
+
+    .top-bar-actions { display: flex; gap: 8px; align-items: center; }
+
+    .icon-btn {
+      width: 38px; height: 38px;
+      border-radius: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.15s;
+    }
+    .icon-btn:active { background: var(--surface2); }
+    .icon-btn svg { width: 18px; height: 18px; color: var(--muted); }
+
+    /* ── Tabs ── */
+    .tab-bar {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      padding: 0 20px;
+      gap: 0;
+      flex-shrink: 0;
+      background: var(--bg);
+    }
+    .tab {
+      flex: 1;
+      padding: 12px 8px;
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      -webkit-tap-highlight-color: transparent;
+      font-size: 0.7rem;
+      color: var(--muted);
+    }
+    .tab svg { width: 20px; height: 20px; }
+    .tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    /* ── Vault tab ── */
+    .vault-content {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 20px 20px calc(var(--safe-bot) + 20px);
+    }
+
+    .search-bar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 16px;
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 20px;
+    }
+    .search-bar svg { width: 16px; height: 16px; color: var(--muted); flex-shrink: 0; }
+    .search-bar input {
+      background: none; border: none; outline: none;
+      color: var(--text); font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem; flex: 1;
+      -webkit-appearance: none;
+    }
+    .search-bar input::placeholder { color: var(--muted); }
+
+    .section-label {
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+      padding-left: 4px;
+    }
+
+    .entries-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+
+    .entry-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 12px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .entry-card:active { background: var(--surface2); border-color: var(--accent); }
+
+    .entry-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    .entry-body { flex: 1; min-width: 0; }
+    .entry-name {
+      font-size: 0.95rem; font-weight: 500;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-bottom: 2px;
+    }
+    .entry-category {
+      font-size: 0.75rem; color: var(--muted);
+    }
+
+    .entry-chevron { color: var(--muted); flex-shrink: 0; margin-top: 10px; }
+    .entry-chevron svg { width: 14px; height: 14px; }
+
+    .fab {
+      position: fixed;
+      bottom: calc(var(--safe-bot) + 90px);
+      right: 24px;
+      width: 56px; height: 56px;
+      border-radius: 16px;
+      background: var(--accent);
+      border: none;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(201,169,110,0.35);
+      -webkit-tap-highlight-color: transparent;
+      transition: transform 0.15s, box-shadow 0.15s;
+      z-index: 10;
+    }
+    .fab:active { transform: scale(0.93); box-shadow: 0 4px 12px rgba(201,169,110,0.2); }
+    .fab svg { width: 24px; height: 24px; color: #0d0f14; }
+
+    .empty-state {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 60px 20px;
+      gap: 14px;
+      text-align: center;
+    }
+    .empty-icon {
+      width: 64px; height: 64px; border-radius: 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.8rem;
+    }
+    .empty-title { font-size: 1rem; font-weight: 500; }
+    .empty-sub { font-size: 0.85rem; color: var(--muted); line-height: 1.6; max-width: 240px; }
+
+    /* ── Sheet overlay (drawer) ── */
+    .sheet-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 100;
+      display: flex; align-items: flex-end;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+    .sheet {
+      width: 100%;
+      background: var(--surface);
+      border-radius: 20px 20px 0 0;
+      border-top: 1px solid var(--border);
+      padding: 12px 24px calc(var(--safe-bot) + 24px);
+      max-height: 90vh;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      animation: slideUp 0.3s cubic-bezier(0.16,1,0.3,1);
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to   { transform: translateY(0); }
+    }
+    .sheet-handle {
+      width: 36px; height: 4px; border-radius: 2px;
+      background: var(--border); margin: 0 auto 20px;
+    }
+    .sheet-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.3rem; margin-bottom: 20px;
+    }
+
+    .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+
+    .category-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+      margin-bottom: 16px;
+    }
+    .cat-chip {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      padding: 10px 4px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      cursor: pointer;
+      font-size: 0.7rem; color: var(--muted);
+      -webkit-tap-highlight-color: transparent;
+      transition: all 0.15s;
+    }
+    .cat-chip.selected { border-color: var(--accent); background: rgba(201,169,110,0.1); color: var(--accent); }
+    .cat-chip span:first-child { font-size: 1.3rem; }
+
+    .hint-field {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      outline: none;
+      width: 100%;
+      resize: none;
+      min-height: 90px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      -webkit-appearance: none;
+    }
+    .hint-field:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(201,169,110,0.12);
+    }
+    .hint-field::placeholder { color: var(--muted); }
+
+    .security-note {
+      background: rgba(142,180,227,0.08);
+      border: 1px solid rgba(142,180,227,0.2);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 0.8rem;
+      color: var(--accent2);
+      line-height: 1.55;
+      margin-bottom: 20px;
+      display: flex; gap: 10px;
+    }
+    .security-note svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; }
+
+    /* ── Detail sheet ── */
+    .detail-header {
+      display: flex; align-items: center; gap: 16px;
+      margin-bottom: 24px;
+    }
+    .detail-icon {
+      width: 52px; height: 52px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem;
+    }
+    .detail-name {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.4rem;
+    }
+    .detail-cat { font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
+
+    .hint-block {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+    .hint-block-label {
+      font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 10px;
+    }
+    .hint-block-value {
+      font-size: 0.95rem; line-height: 1.65; color: var(--text);
+      word-break: break-word;
+    }
+    .hint-block-date {
+      font-size: 0.75rem; color: var(--muted); margin-top: 10px;
+    }
+
+    .detail-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 24px; }
+
+    /* ── Settings tab ── */
+    .settings-content {
+      flex: 1; overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 24px 20px calc(var(--safe-bot) + 20px);
+    }
+    .settings-section { margin-bottom: 28px; }
+    .settings-section-title {
+      font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 10px; padding-left: 4px;
+    }
+    .settings-row {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+    .settings-item {
+      padding: 15px 16px;
+      display: flex; align-items: center; gap: 14px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.15s;
+    }
+    .settings-item:last-child { border-bottom: none; }
+    .settings-item:active { background: var(--surface2); }
+    .settings-icon {
+      width: 34px; height: 34px; border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .settings-item-text { flex: 1; }
+    .settings-item-title { font-size: 0.9rem; }
+    .settings-item-sub { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+    .settings-item svg.chevron { width: 14px; height: 14px; color: var(--muted); }
+
+    .coming-soon-badge {
+      background: rgba(201,169,110,0.12);
+      border: 1px solid rgba(201,169,110,0.25);
+      color: var(--accent);
+      font-size: 0.65rem;
+      padding: 2px 8px;
+      border-radius: 20px;
+      letter-spacing: 0.05em;
+      font-weight: 500;
+    }
+
+    .app-version {
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 20px;
+    }
+
+    /* ── Setup screen ── */
+    .setup-screen {
+      flex: 1;
+      display: flex; flex-direction: column;
+      padding: calc(var(--safe-top) + 48px) 32px calc(var(--safe-bot) + 40px);
+      background: radial-gradient(ellipse at 40% 80%, #1a2535 0%, var(--bg) 65%);
+    }
+    .setup-step {
+      font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--accent); margin-bottom: 16px;
+    }
+    .setup-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2rem; line-height: 1.2;
+      margin-bottom: 14px;
+    }
+    .setup-body {
+      font-size: 0.9rem; color: var(--muted); line-height: 1.7;
+      margin-bottom: 40px;
+    }
+    .setup-body strong { color: var(--text); }
+    .setup-form { display: flex; flex-direction: column; gap: 14px; }
+
+    .strength-bar {
+      height: 4px; border-radius: 2px;
+      background: var(--border);
+      overflow: hidden; margin-top: 4px;
+    }
+    .strength-fill {
+      height: 100%; border-radius: 2px;
+      transition: width 0.3s, background 0.3s;
+    }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: calc(var(--safe-bot) + 100px);
+      left: 50%; transform: translateX(-50%);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 10px 20px;
+      font-size: 0.85rem;
+      color: var(--text);
+      z-index: 200;
+      pointer-events: none;
+      animation: toastIn 0.3s cubic-bezier(0.16,1,0.3,1), toastOut 0.3s 1.7s ease forwards;
+      white-space: nowrap;
+    }
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+      to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+    @keyframes toastOut {
+      to { opacity: 0; transform: translateX(-50%) translateY(-6px); }
+    }
+
+    /* Spinner */
+    .spinner {
+      width: 20px; height: 20px;
+      border: 2px solid rgba(255,255,255,0.15);
+      border-top-color: currentColor;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+
+<script>
+'use strict';
+const { useState, useEffect, useCallback, useRef } = React;
+
+// ── Crypto helpers ────────────────────────────────────────────────────────────
+async function deriveKey(passphrase, salt) {
+  const enc = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw', enc.encode(passphrase), { name: 'PBKDF2' }, false, ['deriveKey']
+  );
+  return crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt, iterations: 310_000, hash: 'SHA-256' },
+    keyMaterial,
+    { name: 'AES-GCM', length: 256 },
+    false, ['encrypt', 'decrypt']
+  );
+}
+
+async function encrypt(plaintext, passphrase) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv   = crypto.getRandomValues(new Uint8Array(12));
+  const key  = await deriveKey(passphrase, salt);
+  const enc  = new TextEncoder();
+  const ct   = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(plaintext));
+  const buf  = new Uint8Array(salt.byteLength + iv.byteLength + ct.byteLength);
+  buf.set(salt, 0); buf.set(iv, 16); buf.set(new Uint8Array(ct), 28);
+  return btoa(String.fromCharCode(...buf));
+}
+
+async function decrypt(b64, passphrase) {
+  const buf  = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+  const salt = buf.slice(0, 16);
+  const iv   = buf.slice(16, 28);
+  const ct   = buf.slice(28);
+  const key  = await deriveKey(passphrase, salt);
+  const pt   = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct);
+  return new TextDecoder().decode(pt);
+}
+
+// ── Storage helpers ───────────────────────────────────────────────────────────
+const STORE_KEY  = 'fv_vault_v1';
+const SETUP_KEY  = 'fv_setup_v1';
+const VERIFY_KEY = 'fv_verify_v1';
+const VERIFY_PLAIN = 'FAMILY_VAULT_OK';
+
+function loadRaw()  { try { return JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); } catch { return []; } }
+function saveRaw(d) { localStorage.setItem(STORE_KEY, JSON.stringify(d)); }
+function isSetup()  { return !!localStorage.getItem(SETUP_KEY); }
+
+// ── Categories ────────────────────────────────────────────────────────────────
+const CATEGORIES = [
+  { id: 'bank',    label: 'Bank',    emoji: '🏦', color: '#6ec9a0' },
+  { id: 'email',   label: 'Email',   emoji: '📧', color: '#8eb4e3' },
+  { id: 'phone',   label: 'Phone',   emoji: '📱', color: '#c9a96e' },
+  { id: 'device',  label: 'Device',  emoji: '💻', color: '#b08ee3' },
+  { id: 'card',    label: 'Card',    emoji: '💳', color: '#e3c08e' },
+  { id: 'social',  label: 'Social',  emoji: '👥', color: '#e38e8e' },
+  { id: 'home',    label: 'Home',    emoji: '🏠', color: '#8ec9c9' },
+  { id: 'other',   label: 'Other',   emoji: '🔑', color: '#a0a0b0' },
+];
+const catMap = Object.fromEntries(CATEGORIES.map(c => [c.id, c]));
+
+// ── Icons (inline SVG strings as components) ─────────────────────────────────
+const Icon = ({ d, ...p }) => React.createElement('svg', { fill:'none', stroke:'currentColor', strokeWidth:1.8, viewBox:'0 0 24 24', strokeLinecap:'round', strokeLinejoin:'round', ...p },
+  React.createElement('path', { d }));
+
+const Icons = {
+  Lock:    () => React.createElement(Icon, { d:'M12 17a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm-7-5V9a7 7 0 1 1 14 0v3' }),
+  Shield:  () => React.createElement(Icon, { d:'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z' }),
+  Plus:    () => React.createElement(Icon, { d:'M12 5v14M5 12h14' }),
+  Search:  () => React.createElement(Icon, { d:'M21 21l-6-6m2-5a7 7 0 1 1-14 0 7 7 0 0 1 14 0z' }),
+  Chevron: () => React.createElement(Icon, { d:'M9 18l6-6-6-6' }),
+  ChevronLeft: () => React.createElement(Icon, { d:'M15 18l-6-6 6-6' }),
+  Edit:    () => React.createElement(Icon, { d:'M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z' }),
+  Trash:   () => React.createElement(Icon, { d:'M3 6h18M19 6l-1 14H6L5 6m5 0V4h4v2' }),
+  Info:    () => React.createElement(Icon, { d:'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zm0-7v-4m0-4h.01' }),
+  Vault:   () => React.createElement(Icon, { d:'M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm7 14a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0-3a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm4.5-5.5h2m-18 0h2' }),
+  Settings:() => React.createElement(Icon, { d:'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm8.9-3a8.9 8.9 0 0 1-.1 1.4l2 1.6-2 3.5-2.4-.9a8 8 0 0 1-2.4 1.4l-.4 2.5h-4l-.4-2.5A8 8 0 0 1 8.9 18l-2.4.9-2-3.5 2-1.6a9 9 0 0 1 0-2.8l-2-1.6 2-3.5 2.4.9a8 8 0 0 1 2.4-1.4L11.6 3h4l.4 2.5A8 8 0 0 1 18.5 7l2.4-.9 2 3.5-2 1.6c.07.46.1.93.1 1.4' }),
+  Export:  () => React.createElement(Icon, { d:'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4m4-5 5 5 5-5m-5 5V3' }),
+  Import:  () => React.createElement(Icon, { d:'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4m4-5-5 5 5-5m0 0V3' }),  // fixed
+  Eye:     () => React.createElement(Icon, { d:'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zm11 3a3 3 0 1 0 0-6 3 3 0 0 0 0 6z' }),
+  EyeOff:  () => React.createElement(Icon, { d:'M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24M1 1l22 22' }),
+  Family:  () => React.createElement(Icon, { d:'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm6 2a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm4 2v2m-4-2a4 4 0 0 1 4 4v2' }),
+};
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function Toast({ msg }) {
+  return React.createElement('div', { className: 'toast' }, msg);
+}
+
+// ── Passphrase strength ───────────────────────────────────────────────────────
+function passphraseStrength(p) {
+  if (!p) return 0;
+  let s = 0;
+  if (p.length >= 8)  s++;
+  if (p.length >= 14) s++;
+  if (/[A-Z]/.test(p)) s++;
+  if (/[0-9]/.test(p)) s++;
+  if (/[^A-Za-z0-9]/.test(p)) s++;
+  return Math.min(s, 4);
+}
+const strengthColors = ['#e07070','#e3c08e','#c9a96e','#6ec9a0'];
+const strengthLabels = ['Weak','Fair','Good','Strong'];
+
+// ── Setup screen ──────────────────────────────────────────────────────────────
+function SetupScreen({ onComplete }) {
+  const [step, setStep]         = useState(1);
+  const [pass, setPass]         = useState('');
+  const [confirm, setConfirm]   = useState('');
+  const [showPass, setShowPass] = useState(false);
+  const [loading, setLoading]   = useState(false);
+  const [err, setErr]           = useState('');
+  const str = passphraseStrength(pass);
+
+  async function handleCreate() {
+    if (pass.length < 6) { setErr('Passphrase must be at least 6 characters.'); return; }
+    if (pass !== confirm) { setErr('Passphrases do not match.'); return; }
+    setErr(''); setLoading(true);
+    try {
+      const verifyToken = await encrypt(VERIFY_PLAIN, pass);
+      localStorage.setItem(VERIFY_KEY, verifyToken);
+      localStorage.setItem(SETUP_KEY, '1');
+      saveRaw([]);
+      onComplete(pass);
+    } catch(e) { setErr('Setup failed. Please try again.'); }
+    setLoading(false);
+  }
+
+  return React.createElement('div', { className: 'setup-screen fade-up' },
+    React.createElement('div', { className: 'setup-step' }, `Step ${step} of 2`),
+    step === 1
+      ? React.createElement(React.Fragment, null,
+          React.createElement('h1', { className: 'setup-title' }, 'Welcome to\nFamily Vault'),
+          React.createElement('p', { className: 'setup-body' },
+            'A private, encrypted space for your family\'s password hints and PINs. ',
+            React.createElement('strong', null, 'Nothing is stored in plain text.'),
+            ' All hints are encrypted with AES-256 right here on your device — only your family passphrase can unlock them.'
+          ),
+          React.createElement('div', { style:{ flex:1 } }),
+          React.createElement('button', { className:'btn btn-primary', onClick: ()=>setStep(2), style:{width:'100%'} }, 'Get Started →')
+        )
+      : React.createElement('div', { className: 'setup-form fade-up' },
+          React.createElement('h1', { className: 'setup-title' }, 'Create your family passphrase'),
+          React.createElement('p', { className: 'setup-body', style:{marginBottom:28} },
+            'Share this passphrase only with family members. ',
+            React.createElement('strong', null, 'If you forget it, your data cannot be recovered.')
+          ),
+          React.createElement('div', { className: 'input-group' },
+            React.createElement('label', { className: 'input-label' }, 'Family Passphrase'),
+            React.createElement('div', { style:{ position:'relative' } },
+              React.createElement('input', {
+                className: 'input-field', type: showPass ? 'text' : 'password',
+                placeholder: 'e.g. sunset-maple-42', value: pass,
+                onChange: e => setPass(e.target.value),
+                style:{ paddingRight:48 }
+              }),
+              React.createElement('button', {
+                onClick: ()=>setShowPass(v=>!v),
+                style:{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', color:'var(--muted)', display:'flex' }
+              }, showPass ? React.createElement(Icons.EyeOff) : React.createElement(Icons.Eye))
+            ),
+            pass && React.createElement('div', null,
+              React.createElement('div', { className:'strength-bar' },
+                React.createElement('div', { className:'strength-fill', style:{ width:`${(str/4)*100}%`, background: strengthColors[str-1] || '#e07070' } })
+              ),
+              React.createElement('div', { style:{ fontSize:'0.75rem', color: strengthColors[str-1], marginTop:4 } }, strengthLabels[str-1] || 'Weak')
+            )
+          ),
+          React.createElement('div', { className: 'input-group' },
+            React.createElement('label', { className: 'input-label' }, 'Confirm Passphrase'),
+            React.createElement('input', {
+              className: 'input-field', type: showPass ? 'text' : 'password',
+              placeholder: 'Repeat your passphrase', value: confirm,
+              onChange: e => setConfirm(e.target.value)
+            })
+          ),
+          err && React.createElement('div', { className:'error-msg' }, err),
+          React.createElement('button', {
+            className:'btn btn-primary', onClick: handleCreate,
+            disabled: !pass || !confirm || loading,
+            style:{ width:'100%', marginTop:8 }
+          }, loading ? React.createElement('span', { className:'spinner' }) : 'Create Vault')
+        )
+  );
+}
+
+// ── Lock screen ───────────────────────────────────────────────────────────────
+function LockScreen({ onUnlock, onReset }) {
+  const [pass, setPass]         = useState('');
+  const [showPass, setShowPass] = useState(false);
+  const [loading, setLoading]   = useState(false);
+  const [err, setErr]           = useState('');
+  const [attempts, setAttempts] = useState(0);
+
+  async function handleUnlock() {
+    if (!pass) return;
+    setLoading(true); setErr('');
+    try {
+      const token = localStorage.getItem(VERIFY_KEY);
+      const plain = await decrypt(token, pass);
+      if (plain === VERIFY_PLAIN) {
+        setAttempts(0);
+        onUnlock(pass);
+      } else throw new Error('bad');
+    } catch {
+      const a = attempts + 1;
+      setAttempts(a);
+      setErr(a >= 5
+        ? 'Too many failed attempts. Consider resetting the vault.'
+        : `Incorrect passphrase. ${5 - a} attempt${5-a===1?'':'s'} remaining.`);
+    }
+    setLoading(false);
+  }
+
+  return React.createElement('div', { className: 'lock-screen' },
+    React.createElement('div', { className:'lock-icon-wrap fade-up' },
+      React.createElement(Icons.Vault, { color:'var(--accent)' })
+    ),
+    React.createElement('h1', { className:'lock-wordmark fade-up-2' },
+      'Family', React.createElement('span', null, ' Vault')
+    ),
+    React.createElement('p', { className:'lock-tagline fade-up-2' }, 'Encrypted · Private · Yours'),
+    React.createElement('div', { className:'lock-form fade-up-3' },
+      React.createElement('div', { className:'input-group' },
+        React.createElement('label', { className:'input-label' }, 'Family Passphrase'),
+        React.createElement('div', { style:{ position:'relative' } },
+          React.createElement('input', {
+            className:'input-field', type: showPass ? 'text':'password',
+            placeholder:'Enter passphrase…', value: pass,
+            onChange: e => setPass(e.target.value),
+            onKeyDown: e => e.key==='Enter' && handleUnlock(),
+            autoFocus: true,
+            style:{ paddingRight:48 }
+          }),
+          React.createElement('button', {
+            onClick: ()=>setShowPass(v=>!v),
+            style:{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', color:'var(--muted)', display:'flex' }
+          }, showPass ? React.createElement(Icons.EyeOff) : React.createElement(Icons.Eye))
+        )
+      ),
+      err && React.createElement('div', { className:'error-msg' }, err),
+      React.createElement('button', {
+        className:'btn btn-primary', onClick: handleUnlock,
+        disabled: !pass || loading,
+        style:{ width:'100%' }
+      }, loading ? React.createElement('span', { className:'spinner' }) : '🔓 Unlock Vault')
+    ),
+    React.createElement('div', { className:'lock-footer fade-up-4' },
+      'Forgot your passphrase? ',
+      React.createElement('button', { onClick: onReset }, 'Reset vault'),
+      React.createElement('br'),
+      React.createElement('br'),
+      '🔒 All data encrypted with AES-256-GCM on-device'
+    )
+  );
+}
+
+// ── Add / Edit sheet ──────────────────────────────────────────────────────────
+function EntrySheet({ entry, passphrase, onSave, onClose }) {
+  const isEdit = !!entry;
+  const [name,     setName]    = useState(entry?.name || '');
+  const [cat,      setCat]     = useState(entry?.category || 'other');
+  const [hint,     setHint]    = useState('');
+  const [loading,  setLoading] = useState(false);
+  const [err,      setErr]     = useState('');
+  const [decrypting, setDecrypting] = useState(isEdit);
+
+  useEffect(() => {
+    if (isEdit && entry.encryptedHint) {
+      setDecrypting(true);
+      decrypt(entry.encryptedHint, passphrase)
+        .then(h => { setHint(h); setDecrypting(false); })
+        .catch(() => { setErr('Could not decrypt hint.'); setDecrypting(false); });
+    }
+  }, []);
+
+  async function handleSave() {
+    if (!name.trim()) { setErr('Name is required.'); return; }
+    if (!hint.trim()) { setErr('Hint is required.'); return; }
+    setLoading(true); setErr('');
+    try {
+      const enc = await encrypt(hint.trim(), passphrase);
+      onSave({
+        id:            entry?.id || Date.now().toString(),
+        name:          name.trim(),
+        category:      cat,
+        encryptedHint: enc,
+        updatedAt:     Date.now(),
+        createdAt:     entry?.createdAt || Date.now(),
+      });
+    } catch { setErr('Encryption failed. Please try again.'); setLoading(false); }
+  }
+
+  return React.createElement('div', { className:'sheet-overlay', onClick: e => e.target===e.currentTarget && onClose() },
+    React.createElement('div', { className:'sheet' },
+      React.createElement('div', { className:'sheet-handle' }),
+      React.createElement('h2', { className:'sheet-title' }, isEdit ? 'Edit Entry' : 'New Entry'),
+      React.createElement('div', { className:'security-note' },
+        React.createElement(Icons.Shield),
+        'Your hint will be encrypted with AES-256 before saving. Only someone with the family passphrase can read it.'
+      ),
+      React.createElement('div', { className:'form-group' },
+        React.createElement('label', { className:'input-label' }, 'Name / Account'),
+        React.createElement('input', {
+          className:'input-field', placeholder:'e.g. Chase Checking, Apple ID…',
+          value: name, onChange: e => setName(e.target.value)
+        })
+      ),
+      React.createElement('div', { className:'form-group' },
+        React.createElement('label', { className:'input-label' }, 'Category'),
+        React.createElement('div', { className:'category-grid' },
+          CATEGORIES.map(c =>
+            React.createElement('div', {
+              key: c.id, className:`cat-chip${cat===c.id?' selected':''}`,
+              onClick: ()=>setCat(c.id)
+            },
+              React.createElement('span', null, c.emoji),
+              React.createElement('span', null, c.label)
+            )
+          )
+        )
+      ),
+      React.createElement('div', { className:'form-group' },
+        React.createElement('label', { className:'input-label' }, 'Password / PIN Hint'),
+        decrypting
+          ? React.createElement('div', { style:{ color:'var(--muted)', fontSize:'0.85rem', padding:'14px' } }, 'Decrypting…')
+          : React.createElement('textarea', {
+              className:'hint-field',
+              placeholder:'e.g. Dad\'s birthday + first street name\nOR: The pin is 19XX where XX = last 2 of year we moved',
+              value: hint, onChange: e => setHint(e.target.value),
+              rows: 4
+            })
+      ),
+      err && React.createElement('div', { className:'error-msg', style:{marginBottom:14} }, err),
+      React.createElement('button', {
+        className:'btn btn-primary', onClick: handleSave,
+        disabled: loading || decrypting,
+        style:{ width:'100%' }
+      }, loading ? React.createElement('span', { className:'spinner' }) : isEdit ? 'Save Changes' : 'Add to Vault')
+    )
+  );
+}
+
+// ── Detail sheet ──────────────────────────────────────────────────────────────
+function DetailSheet({ entry, passphrase, onEdit, onDelete, onClose }) {
+  const [hint,       setHint]      = useState(null);
+  const [loading,    setLoading]   = useState(true);
+  const [err,        setErr]       = useState('');
+  const [showDelete, setShowDelete]= useState(false);
+  const cat = catMap[entry.category] || catMap.other;
+
+  useEffect(() => {
+    decrypt(entry.encryptedHint, passphrase)
+      .then(h => { setHint(h); setLoading(false); })
+      .catch(() => { setErr('Decryption failed.'); setLoading(false); });
+  }, []);
+
+  const fmt = ts => new Date(ts).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+
+  return React.createElement('div', { className:'sheet-overlay', onClick: e => e.target===e.currentTarget && onClose() },
+    React.createElement('div', { className:'sheet' },
+      React.createElement('div', { className:'sheet-handle' }),
+      React.createElement('div', { className:'detail-header' },
+        React.createElement('div', { className:'detail-icon', style:{ background:`${cat.color}22` } }, cat.emoji),
+        React.createElement('div', null,
+          React.createElement('div', { className:'detail-name' }, entry.name),
+          React.createElement('div', { className:'detail-cat' }, cat.label)
+        )
+      ),
+      React.createElement('div', { className:'hint-block' },
+        React.createElement('div', { className:'hint-block-label' }, '🔒 Encrypted Hint'),
+        loading
+          ? React.createElement('div', { style:{ color:'var(--muted)', fontSize:'0.85rem' } }, 'Decrypting…')
+          : err
+            ? React.createElement('div', { style:{ color:'var(--danger)', fontSize:'0.85rem' } }, err)
+            : React.createElement('div', { className:'hint-block-value' }, hint),
+        React.createElement('div', { className:'hint-block-date' },
+          `Updated ${fmt(entry.updatedAt)}`,
+          entry.createdAt !== entry.updatedAt ? ` · Created ${fmt(entry.createdAt)}` : ''
+        )
+      ),
+      React.createElement('div', { className:'detail-actions' },
+        React.createElement('button', { className:'btn btn-secondary', onClick: ()=>{ onClose(); onEdit(entry); }, style:{width:'100%'} },
+          React.createElement(Icons.Edit), ' Edit Entry'
+        ),
+        showDelete
+          ? React.createElement('div', { style:{ display:'flex', gap:10 } },
+              React.createElement('button', { className:'btn btn-danger', onClick:()=>onDelete(entry.id), style:{flex:1} }, 'Confirm Delete'),
+              React.createElement('button', { className:'btn btn-secondary', onClick:()=>setShowDelete(false), style:{flex:1} }, 'Cancel')
+            )
+          : React.createElement('button', { className:'btn btn-danger', onClick:()=>setShowDelete(true), style:{width:'100%'} },
+              React.createElement(Icons.Trash), ' Delete Entry'
+            )
+      )
+    )
+  );
+}
+
+// ── Vault tab ─────────────────────────────────────────────────────────────────
+function VaultTab({ entries, passphrase, onAdd, onEdit, onDelete, toast }) {
+  const [search,  setSearch]  = useState('');
+  const [viewing, setViewing] = useState(null);
+  const [editing, setEditing] = useState(null);
+  const [adding,  setAdding]  = useState(false);
+
+  const filtered = entries.filter(e =>
+    e.name.toLowerCase().includes(search.toLowerCase()) ||
+    (catMap[e.category]?.label||'').toLowerCase().includes(search.toLowerCase())
+  );
+
+  const grouped = CATEGORIES
+    .map(c => ({ cat: c, items: filtered.filter(e => e.category === c.id) }))
+    .filter(g => g.items.length > 0);
+
+  function handleSave(entry) {
+    onAdd(entry);
+    setAdding(false);
+    setEditing(null);
+    toast(editing ? 'Entry updated ✓' : 'Entry added ✓');
+  }
+
+  return React.createElement(React.Fragment, null,
+    React.createElement('div', { className:'vault-content' },
+      React.createElement('div', { className:'search-bar fade-up' },
+        React.createElement(Icons.Search),
+        React.createElement('input', { placeholder:'Search vault…', value:search, onChange:e=>setSearch(e.target.value) })
+      ),
+      entries.length === 0
+        ? React.createElement('div', { className:'empty-state fade-up-2' },
+            React.createElement('div', { className:'empty-icon' }, '🔐'),
+            React.createElement('div', { className:'empty-title' }, 'Your vault is empty'),
+            React.createElement('div', { className:'empty-sub' }, 'Tap the + button to add your first password hint. Everything is encrypted before saving.')
+          )
+        : filtered.length === 0
+          ? React.createElement('div', { className:'empty-state' },
+              React.createElement('div', { className:'empty-icon' }, '🔍'),
+              React.createElement('div', { className:'empty-title' }, 'No results'),
+              React.createElement('div', { className:'empty-sub' }, `No entries match "${search}"`)
+            )
+          : grouped.map(({ cat, items }) =>
+              React.createElement('div', { key:cat.id },
+                React.createElement('div', { className:'section-label' }, `${cat.emoji} ${cat.label}`),
+                React.createElement('div', { className:'entries-list' },
+                  items.map(e =>
+                    React.createElement('div', { key:e.id, className:'entry-card fade-up', onClick:()=>setViewing(e) },
+                      React.createElement('div', { className:'entry-icon', style:{ background:`${cat.color}22` } }, cat.emoji),
+                      React.createElement('div', { className:'entry-body' },
+                        React.createElement('div', { className:'entry-name' }, e.name),
+                        React.createElement('div', { className:'entry-category' }, cat.label)
+                      ),
+                      React.createElement('div', { className:'entry-chevron' }, React.createElement(Icons.Chevron))
+                    )
+                  )
+                )
+              )
+            )
+    ),
+
+    React.createElement('button', { className:'fab', onClick:()=>setAdding(true) },
+      React.createElement(Icons.Plus)
+    ),
+
+    (adding || editing) && React.createElement(EntrySheet, {
+      entry: editing || null,
+      passphrase,
+      onSave: handleSave,
+      onClose: ()=>{ setAdding(false); setEditing(null); }
+    }),
+
+    viewing && React.createElement(DetailSheet, {
+      entry: viewing,
+      passphrase,
+      onEdit: e => { setViewing(null); setEditing(e); },
+      onDelete: id => { onDelete(id); setViewing(null); toast('Entry deleted'); },
+      onClose: ()=>setViewing(null)
+    })
+  );
+}
+
+// ── Settings tab ──────────────────────────────────────────────────────────────
+function SettingsTab({ onLock, onReset, passphrase, entries, toast }) {
+  const [showExport, setShowExport] = useState(false);
+  const [showImport, setShowImport] = useState(false);
+  const [exportText, setExportText] = useState('');
+  const [importText, setImportText] = useState('');
+
+  function handleExport() {
+    const raw = loadRaw();
+    const blob = JSON.stringify({ version: 1, exported: Date.now(), count: raw.length, data: raw }, null, 2);
+    setExportText(blob);
+    setShowExport(true);
+  }
+
+  async function handleImport() {
+    try {
+      const parsed = JSON.parse(importText);
+      if (!Array.isArray(parsed.data)) throw new Error();
+      // Verify first entry decrypts
+      if (parsed.data.length > 0) {
+        await decrypt(parsed.data[0].encryptedHint, passphrase);
+      }
+      saveRaw(parsed.data);
+      toast(`Imported ${parsed.data.length} entries ✓`);
+      setShowImport(false);
+      window.location.reload();
+    } catch { toast('Import failed — wrong passphrase or invalid file'); }
+  }
+
+  function copyExport() {
+    navigator.clipboard?.writeText(exportText).then(()=>toast('Copied to clipboard ✓')).catch(()=>{});
+  }
+
+  return React.createElement(React.Fragment, null,
+    React.createElement('div', { className:'settings-content' },
+
+      React.createElement('div', { className:'settings-section fade-up' },
+        React.createElement('div', { className:'settings-section-title' }, 'Vault'),
+        React.createElement('div', { className:'settings-row' },
+          React.createElement('div', { className:'settings-item', onClick:handleExport },
+            React.createElement('div', { className:'settings-icon', style:{background:'rgba(142,180,227,0.12)'} },
+              React.createElement(Icons.Export, { color:'var(--accent2)', width:18, height:18 })
+            ),
+            React.createElement('div', { className:'settings-item-text' },
+              React.createElement('div', { className:'settings-item-title' }, 'Export Vault'),
+              React.createElement('div', { className:'settings-item-sub' }, 'Backup encrypted data as JSON')
+            ),
+            React.createElement(Icons.Chevron, { className:'chevron' })
+          ),
+          React.createElement('div', { className:'settings-item', onClick:()=>setShowImport(true) },
+            React.createElement('div', { className:'settings-icon', style:{background:'rgba(110,201,160,0.12)'} },
+              React.createElement(Icons.Import, { color:'var(--success)', width:18, height:18 })
+            ),
+            React.createElement('div', { className:'settings-item-text' },
+              React.createElement('div', { className:'settings-item-title' }, 'Import Vault'),
+              React.createElement('div', { className:'settings-item-sub' }, 'Restore from a backup file')
+            ),
+            React.createElement(Icons.Chevron, { className:'chevron' })
+          )
+        )
+      ),
+
+      React.createElement('div', { className:'settings-section fade-up-2' },
+        React.createElement('div', { className:'settings-section-title' }, 'Coming Soon'),
+        React.createElement('div', { className:'settings-row' },
+          [
+            { icon:'🗺️', title:'Vacation Planner', sub:'Plan family trips together', color:'rgba(201,169,110,0.12)' },
+            { icon:'💬', title:'Family Chat',       sub:'Secure family messaging',   color:'rgba(142,180,227,0.12)' },
+            { icon:'🆘', title:'Emergency Contacts',sub:'Quick access when needed',  color:'rgba(224,112,112,0.12)' },
+          ].map(({ icon, title, sub, color }) =>
+            React.createElement('div', { key:title, className:'settings-item' },
+              React.createElement('div', { className:'settings-icon', style:{background:color} }, icon),
+              React.createElement('div', { className:'settings-item-text' },
+                React.createElement('div', { className:'settings-item-title' }, title),
+                React.createElement('div', { className:'settings-item-sub' }, sub)
+              ),
+              React.createElement('span', { className:'coming-soon-badge' }, 'Soon')
+            )
+          )
+        )
+      ),
+
+      React.createElement('div', { className:'settings-section fade-up-3' },
+        React.createElement('div', { className:'settings-section-title' }, 'Security'),
+        React.createElement('div', { className:'settings-row' },
+          React.createElement('div', { className:'settings-item', onClick:onLock },
+            React.createElement('div', { className:'settings-icon', style:{background:'rgba(201,169,110,0.12)'} },
+              React.createElement(Icons.Lock, { color:'var(--accent)', width:18, height:18 })
+            ),
+            React.createElement('div', { className:'settings-item-text' },
+              React.createElement('div', { className:'settings-item-title' }, 'Lock Vault'),
+              React.createElement('div', { className:'settings-item-sub' }, 'Require passphrase to access')
+            ),
+            React.createElement(Icons.Chevron, { className:'chevron' })
+          ),
+          React.createElement('div', { className:'settings-item', onClick:onReset },
+            React.createElement('div', { className:'settings-icon', style:{background:'rgba(224,112,112,0.12)'} },
+              React.createElement(Icons.Trash, { color:'var(--danger)', width:18, height:18 })
+            ),
+            React.createElement('div', { className:'settings-item-text' },
+              React.createElement('div', { className:'settings-item-title' }, 'Reset Vault'),
+              React.createElement('div', { className:'settings-item-sub' }, 'Permanently erase all data')
+            ),
+            React.createElement(Icons.Chevron, { className:'chevron' })
+          )
+        )
+      ),
+
+      React.createElement('div', { className:'app-version fade-up-4' },
+        '🔒 Family Vault v1.0 — All data encrypted with AES-256-GCM\nStored locally on this device'
+      )
+    ),
+
+    // Export sheet
+    showExport && React.createElement('div', { className:'sheet-overlay', onClick: e=>e.target===e.currentTarget&&setShowExport(false) },
+      React.createElement('div', { className:'sheet' },
+        React.createElement('div', { className:'sheet-handle' }),
+        React.createElement('h2', { className:'sheet-title' }, 'Export Vault'),
+        React.createElement('div', { className:'security-note' },
+          React.createElement(Icons.Shield),
+          'This file contains your encrypted hints. It\'s safe to save, but keep it private. You\'ll need your family passphrase to import it.'
+        ),
+        React.createElement('textarea', {
+          className:'hint-field', readOnly:true, value:exportText,
+          style:{ minHeight:160, fontSize:'0.75rem', fontFamily:'monospace' }
+        }),
+        React.createElement('button', { className:'btn btn-primary', onClick:copyExport, style:{width:'100%',marginTop:14} }, '📋 Copy to Clipboard')
+      )
+    ),
+
+    // Import sheet
+    showImport && React.createElement('div', { className:'sheet-overlay', onClick:e=>e.target===e.currentTarget&&setShowImport(false) },
+      React.createElement('div', { className:'sheet' },
+        React.createElement('div', { className:'sheet-handle' }),
+        React.createElement('h2', { className:'sheet-title' }, 'Import Vault'),
+        React.createElement('div', { className:'security-note' },
+          React.createElement(Icons.Shield),
+          'Paste your exported JSON backup below. This will replace all current entries.'
+        ),
+        React.createElement('textarea', {
+          className:'hint-field', placeholder:'Paste exported JSON here…',
+          value:importText, onChange:e=>setImportText(e.target.value),
+          style:{ minHeight:160, fontSize:'0.8rem', fontFamily:'monospace' }
+        }),
+        React.createElement('button', { className:'btn btn-primary', onClick:handleImport, disabled:!importText, style:{width:'100%',marginTop:14} }, 'Import & Replace')
+      )
+    )
+  );
+}
+
+// ── Main App ──────────────────────────────────────────────────────────────────
+function App() {
+  const [phase,      setPhase]    = useState(isSetup() ? 'lock' : 'setup');
+  const [passphrase, setPassphrase]= useState(null);
+  const [entries,    setEntries]  = useState([]);
+  const [activeTab,  setActiveTab]= useState('vault');
+  const [toast,      setToast]    = useState(null);
+  const toastTimer = useRef(null);
+
+  function showToast(msg) {
+    setToast(msg);
+    clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(()=>setToast(null), 2100);
+  }
+
+  function handleUnlock(pass) {
+    setPassphrase(pass);
+    setEntries(loadRaw());
+    setPhase('app');
+  }
+
+  function handleLock() {
+    setPassphrase(null);
+    setEntries([]);
+    setPhase('lock');
+  }
+
+  function handleReset() {
+    if (!window.confirm('This will permanently delete all vault entries and cannot be undone. Are you sure?')) return;
+    localStorage.removeItem(STORE_KEY);
+    localStorage.removeItem(SETUP_KEY);
+    localStorage.removeItem(VERIFY_KEY);
+    setPhase('setup');
+    setPassphrase(null);
+    setEntries([]);
+  }
+
+  function upsertEntry(entry) {
+    setEntries(prev => {
+      const idx = prev.findIndex(e => e.id === entry.id);
+      const next = idx >= 0
+        ? prev.map(e => e.id===entry.id ? entry : e)
+        : [...prev, entry];
+      saveRaw(next);
+      return next;
+    });
+  }
+
+  function deleteEntry(id) {
+    setEntries(prev => {
+      const next = prev.filter(e => e.id !== id);
+      saveRaw(next);
+      return next;
+    });
+  }
+
+  if (phase === 'setup') return React.createElement(React.Fragment, null,
+    React.createElement('div', { className:'app-shell' },
+      React.createElement(SetupScreen, { onComplete: handleUnlock })
+    )
+  );
+
+  if (phase === 'lock') return React.createElement(React.Fragment, null,
+    React.createElement('div', { className:'app-shell' },
+      React.createElement(LockScreen, { onUnlock: handleUnlock, onReset: handleReset })
+    )
+  );
+
+  const tabs = [
+    { id:'vault',    label:'Vault',    Icon: Icons.Vault },
+    { id:'settings', label:'Settings', Icon: Icons.Settings },
+  ];
+
+  return React.createElement(React.Fragment, null,
+    React.createElement('div', { className:'app-shell' },
+      React.createElement('div', { className:'top-bar' },
+        React.createElement('span', { className:'top-bar-title' },
+          'Family', React.createElement('span', null, ' Vault')
+        ),
+        React.createElement('div', { className:'top-bar-actions' },
+          React.createElement('div', { className:'icon-btn', onClick:handleLock, title:'Lock vault' },
+            React.createElement(Icons.Lock)
+          )
+        )
+      ),
+
+      React.createElement('div', { className:'tab-bar' },
+        tabs.map(t =>
+          React.createElement('div', {
+            key:t.id, className:`tab${activeTab===t.id?' active':''}`,
+            onClick:()=>setActiveTab(t.id)
+          },
+            React.createElement(t.Icon),
+            React.createElement('span', null, t.label)
+          )
+        )
+      ),
+
+      activeTab === 'vault'
+        ? React.createElement(VaultTab, {
+            entries, passphrase,
+            onAdd: upsertEntry, onEdit: upsertEntry, onDelete: deleteEntry,
+            toast: showToast
+          })
+        : React.createElement(SettingsTab, {
+            onLock: handleLock, onReset: handleReset,
+            passphrase, entries, toast: showToast
+          })
+    ),
+    toast && React.createElement(Toast, { key:toast, msg:toast })
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
+</script>
+</body>
+</html>
